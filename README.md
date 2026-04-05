@@ -2,3 +2,4 @@
 - Ethan Bar
 - Prisha Boreddy
 - Jack Burky
+- Shubhi Agarwal
