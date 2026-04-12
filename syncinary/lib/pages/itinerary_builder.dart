@@ -85,6 +85,8 @@ class _itineraryState extends State<itinerary_builder> {
           ),
         ), 
       ),
+
+      Center(child: Text("Test"),)
       
     ];
 
