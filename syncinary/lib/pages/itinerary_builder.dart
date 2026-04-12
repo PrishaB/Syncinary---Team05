@@ -1,77 +1,148 @@
 import 'package:flutter/material.dart';
 
-
 class itinerary_builder extends StatefulWidget {
-  const itinerary_builder({super.key, required this.title});
+  const itinerary_builder({super.key});
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-  
   @override
   State<itinerary_builder> createState() => _itineraryState();
+
 }
 
 class _itineraryState extends State<itinerary_builder> {
-  int _counter = 0;
+  final TextEditingController _startController = TextEditingController();
+  final TextEditingController _endController = TextEditingController();
+  
+  int currentDisplay = 0; 
 
-  void _incrementCounter() {
+  
+
+  void updateDisplay(int display) {
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      currentDisplay = display;
     });
-
-    
   }
 
-  void _resetCounter() {
-      setState(() {
-        _counter = 0;
-      });
-    }
-
   @override
+  
   Widget build(BuildContext context) {
+    final List<Widget> screens = [
+      Center(
+        child: 
+        ColoredBox(
+          color: Color(0xFFE8DEF8),
+           
+          child:
+            Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            spacing: 20,
+            
+            children: [
+              const Icon(Icons.menu),
+              SizedBox(
+                width: 300,
+                child: TextField(
+                  controller: _startController,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Where are you starting from?',
+                  ),
+                ),
+              ),
+
+              const Icon(Icons.search),
+            ],
+          ),
+        ), 
+      ),
+
+      Center(
+        child: 
+        ColoredBox(
+          color: Color(0xFFE8DEF8),
+           
+          child:
+            Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            spacing: 20,
+            
+            children: [
+              const Icon(Icons.menu),
+              SizedBox(
+                width: 300,
+                child: TextField(
+                  controller: _endController,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Choose destination',
+                  ),
+                ),
+              ),
+
+              const Icon(Icons.search),
+            ],
+          ),
+        ), 
+      ),
+      
+    ];
+
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          spacing: 20,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
+        // title: Text("Schedule Builder"),
+        centerTitle: true,
+        
+        backgroundColor: Color(0xFFE8DEF8),
+        title: 
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            spacing: 10,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  IconButton(
+                  onPressed: () => updateDisplay(0), 
+                  icon: const Icon(Icons.star_border_outlined),
+                  color: currentDisplay == 0 ? Color(0xFFF3EDF7) : Color(0xFF49454F),
+                  ),
 
-            ElevatedButton(
-              onPressed: _resetCounter, 
-              child: const Text('Reset Counter'),
-            ),
-          ],  
-        ),
+                  Text("From"),
+                ]
+              ),
+
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  IconButton(
+                  onPressed: () => updateDisplay(1), 
+                  icon: const Icon(Icons.star_border_outlined),
+                  color: currentDisplay == 1 ? Color(0xFFF3EDF7) : Color(0xFF49454F),
+                  ),
+
+                  Text("Destination"),
+                ]
+              ),
+
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  IconButton(
+                  onPressed: () => updateDisplay(2), 
+                  icon: const Icon(Icons.star_border_outlined),
+                  color: currentDisplay == 2 ? Color(0xFFF3EDF7) : Color(0xFF49454F),
+                  ),
+
+                  Text("Dates"),
+                ]
+              ),
+            ]
+          )
       ),
 
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
+      body: screens[currentDisplay],
+
     );
   }
 }

@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: .fromSeed(seedColor: const Color.fromARGB(255, 58, 104, 183)),
       ),
-      home: const itinerary_builder(title: 'Schedule Builder'),
+      home: const itinerary_builder(),
     );
   }
 }
