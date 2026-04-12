@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'flight_search.dart';
 
 
 class itinerary_builder extends StatefulWidget {
@@ -62,6 +63,15 @@ class _itineraryState extends State<itinerary_builder> {
             ElevatedButton(
               onPressed: _resetCounter, 
               child: const Text('Reset Counter'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const flight_search(title: 'Flight Search'),
+                ),
+              ),
+              child: const Text('Search Flights'),
             ),
           ],  
         ),
