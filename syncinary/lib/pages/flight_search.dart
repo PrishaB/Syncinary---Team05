@@ -1,45 +1,48 @@
 import 'package:flutter/material.dart';
-
+import 'amadeus_service.dart';
 
 class flight_search extends StatefulWidget {
   const flight_search({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
-  
+
   @override
-  State<flight_search> createState() => _flightState();
+  State<flight_search> createState() => _FlightSearchState();
 }
 
-class _flightState extends State<flight_search> {
-  int _counter = 0;
+class _FlightSearchState extends State<flight_search> {
+  final _amadeus = AmadeusService();
+  final _originCtrl = TextEditingController();
+  final _destCtrl = TextEditingController();
+  final _dateCtrl = TextEditingController();
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  List<dynamic> _results = [];
+  bool _loading = false;
+  String? _error;
 
-    
+  Future<void> _search() async {
+    setState(() { _loading = true; _error = null; });
+    try {
+      final flights = await _amadeus.searchFlights(
+        origin: _originCtrl.text.trim().toUpperCase(),
+        destination: _destCtrl.text.trim().toUpperCase(),
+        departureDate: _dateCtrl.text.trim(),
+      );
+      setState(() { _results = flights; });
+    } catch (e) {
+      setState(() { _error = e.toString(); });
+    } finally {
+      setState(() { _loading = false; });
+    }
   }
 
-  void _resetCounter() {
-      setState(() {
-        _counter = 0;
-      });
-    }
+  String _flightSummary(dynamic offer) {
+    final seg = offer['itineraries'][0]['segments'][0];
+    final dep = seg['departure']['iataCode'];
+    final arr = seg['arrival']['iataCode'];
+    final time = seg['departure']['at'];
+    final price = offer['price']['total'];
+    return '$dep → $arr  |  $time  |  \$$price';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,29 +51,28 @@ class _flightState extends State<flight_search> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(16),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          spacing: 20,
           children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+            TextField(controller: _originCtrl, decoration: const InputDecoration(labelText: 'Origin (e.g. JFK)')),
+            TextField(controller: _destCtrl, decoration: const InputDecoration(labelText: 'Destination (e.g. LAX)')),
+            TextField(controller: _dateCtrl, decoration: const InputDecoration(labelText: 'Departure Date (YYYY-MM-DD)')),
+            const SizedBox(height: 12),
+            ElevatedButton(onPressed: _loading ? null : _search, child: const Text('Search Flights')),
+            const SizedBox(height: 12),
+            if (_loading) const CircularProgressIndicator(),
+            if (_error != null) Text(_error!, style: const TextStyle(color: Colors.red)),
+            Expanded(
+              child: ListView.builder(
+                itemCount: _results.length,
+                itemBuilder: (_, i) => Card(
+                  child: ListTile(title: Text(_flightSummary(_results[i]))),
+                ),
+              ),
             ),
-
-            ElevatedButton(
-              onPressed: _resetCounter, 
-              child: const Text('Reset Counter'),
-            ),
-          ],  
+          ],
         ),
-      ),
-
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
       ),
     );
   }
