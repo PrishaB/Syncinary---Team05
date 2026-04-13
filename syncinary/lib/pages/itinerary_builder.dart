@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'amadeus_service.dart';
+import 'flight_search.dart';
 
 class itinerary_builder extends StatefulWidget {
   const itinerary_builder({super.key});
@@ -11,8 +13,11 @@ class itinerary_builder extends StatefulWidget {
 class _itineraryState extends State<itinerary_builder> {
   final TextEditingController _startController = TextEditingController();
   final TextEditingController _endController = TextEditingController();
-  
-  int currentDisplay = 0; 
+  final _amadeus = AmadeusService();
+
+  int currentDisplay = 0;
+  DateTime? _departureDate;
+  bool _loading = false; 
 
   
 
@@ -27,66 +32,130 @@ class _itineraryState extends State<itinerary_builder> {
   Widget build(BuildContext context) {
     final List<Widget> screens = [
       Center(
-        child: 
-        ColoredBox(
-          color: Color(0xFFE8DEF8),
-           
-          child:
-            Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            spacing: 20,
-            
-            children: [
-              const Icon(Icons.menu),
-              SizedBox(
-                width: 300,
-                child: TextField(
-                  controller: _startController,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Where are you starting from?',
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          spacing: 16,
+          children: [
+            ColoredBox(
+              color: Color(0xFFE8DEF8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                spacing: 20,
+                children: [
+                  const Icon(Icons.menu),
+                  SizedBox(
+                    width: 300,
+                    child: TextField(
+                      controller: _startController,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        labelText: 'Where are you starting from?',
+                      ),
+                    ),
                   ),
-                ),
+                  const Icon(Icons.search),
+                ],
               ),
-
-              const Icon(Icons.search),
-            ],
-          ),
-        ), 
+            ),
+            ElevatedButton(
+              onPressed: () => updateDisplay(1),
+              child: const Text('Next'),
+            ),
+          ],
+        ),
       ),
 
       Center(
-        child: 
-        ColoredBox(
-          color: Color(0xFFE8DEF8),
-           
-          child:
-            Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            spacing: 20,
-            
-            children: [
-              const Icon(Icons.menu),
-              SizedBox(
-                width: 300,
-                child: TextField(
-                  controller: _endController,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Choose destination',
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          spacing: 16,
+          children: [
+            ColoredBox(
+              color: Color(0xFFE8DEF8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                spacing: 20,
+                children: [
+                  const Icon(Icons.menu),
+                  SizedBox(
+                    width: 300,
+                    child: TextField(
+                      controller: _endController,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        labelText: 'Choose destination',
+                      ),
+                    ),
                   ),
-                ),
+                  const Icon(Icons.search),
+                ],
               ),
-
-              const Icon(Icons.search),
-            ],
-          ),
-        ), 
+            ),
+            ElevatedButton(
+              onPressed: () => updateDisplay(2),
+              child: const Text('Next'),
+            ),
+          ],
+        ),
       ),
 
-      Center(child: Text("Test"),)
+      Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          spacing: 16,
+          children: [
+            Text(_departureDate == null
+                ? 'No departure date selected'
+                : 'Departure: ${_departureDate!.toLocal().toString().split(' ')[0]}'),
+            ElevatedButton(
+              onPressed: () async {
+                final picked = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime.now(),
+                  lastDate: DateTime.now().add(const Duration(days: 365)),
+                );
+                if (picked != null) setState(() => _departureDate = picked);
+              },
+              child: const Text('Pick Departure Date'),
+            ),
+            ElevatedButton(
+              onPressed: _loading ? null : () async {
+                if (_startController.text.isEmpty ||
+                    _endController.text.isEmpty ||
+                    _departureDate == null) return;
+                setState(() => _loading = true);
+                try {
+                  final date = _departureDate!.toLocal().toString().split(' ')[0];
+                  final results = await _amadeus.searchFlights(
+                    origin: _startController.text.trim().toUpperCase(),
+                    destination: _endController.text.trim().toUpperCase(),
+                    departureDate: date,
+                  );
+                  if (context.mounted) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => flight_search(
+                          title: 'Flight Results',
+                          initialResults: results,
+                        ),
+                      ),
+                    );
+                  }
+                } finally {
+                  setState(() => _loading = false);
+                }
+              },
+              child: _loading
+                  ? const CircularProgressIndicator()
+                  : const Text('Search Flights'),
+            ),
+          ],
+        ),
+      )
       
     ];
 
